@@ -1,0 +1,57 @@
+version: "3.3"
+
+services:
+  db:
+    image: mysql/mysql-server:8.0.23
+    container_name: mysqldb   
+    restart: always
+    environment:
+      MYSQL_PORT: 3306
+      MYSQL_ROOT_PASSWORD: 'mysql'
+    ports:
+      - '3306:3306'
+    expose:
+      - '3306'
+    volumes:
+      - ./mysql-script:/docker-entrypoint-initdb.d
+    networks:
+      project:
+        ipv4_address: 172.69.0.3
+
+  backend:
+    build: backend/.
+    image: backend:latest
+    restart: on-failure
+    container_name: backend  
+    ports:
+      - "8081:8081"
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://172.69.0.3:3306/project
+      SPRING_DATASOURCE_USERNAME: int221
+      SPRING_DATASOURCE_PASSWORD: mysql
+    networks:
+      project:
+        ipv4_address: 172.69.0.4
+
+  frontend:
+    build: frontend/.
+    image: frontend:latest
+    restart: on-failure
+    container_name: frontend 
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+    networks:
+      project:
+        ipv4_address: 172.69.0.5
+
+networks:
+  project:
+    external:
+      name: project
+  
+
+          
